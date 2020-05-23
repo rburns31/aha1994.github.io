@@ -1,0 +1,164 @@
+/* Assign grid instructions to our parent grid container */
+.grid-container {
+    display: grid;
+    grid-template-columns: 2fr 14fr .5fr;
+    grid-template-rows: 1fr 14fr 1fr;
+    grid-template-areas:
+      "sidenav header rightCol"
+      "sidenav main rightCol"
+      "sidenav footer rightCol";
+    height: 100vh;
+  }
+  
+/* Give every child element its grid name */
+.header {
+  grid-area: header;
+  background-color: #394263;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+  grid-template-rows: 1fr;
+  grid-template-areas: '. . dropdown . .';
+}
+
+.select{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.dropdown {
+  grid-area: dropdown;
+  background-color: #648ca6;
+  width: fit-content;
+}
+
+.sidenav {
+  grid-area: sidenav;
+  background-color: #394263;
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr 1fr 1fr 1fr 1fr 1fr;
+  grid-template-areas: 
+  'dropdown'
+  'hikes'
+  'miles'
+  'elevation'
+  'states'
+  '.';
+}
+
+.icon {
+  grid-area: icon;
+}
+
+.totalStates {
+  grid-area: states;
+  background-color: #394263;
+}
+
+.totalHikes {
+  grid-area: hikes;
+  background-color: #394263;
+}
+
+.totalMiles {
+  grid-area: miles;
+  background-color: #394263;
+}
+
+.totalElevation {
+  grid-area: elevation;
+  background-color: #394263;
+}
+
+.main {
+  background-color: #394263;
+  grid-area: main;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  grid-template-areas: 
+    "mapbox charts"
+    "log cumulative";
+}
+
+.footer {
+  grid-area: footer;
+  background-color: #394263;
+}
+
+.mapbox {
+  grid-area: mapbox;
+  background-color: #648ca6;
+  margin:  3px 3px 3px 3px;
+  border-radius: 10px;
+}
+
+.log {
+  grid-area: log;
+  background-color: #394263;
+  margin:  3px 3px 3px 3px;
+  border-radius: 10px;
+}
+
+.charts {
+  grid-area: charts;
+  background-color: #394263;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(1, 1fr);
+  grid-template-areas: 'scatter pie';
+  
+}
+
+.cumulative {
+  grid-area: cumulative;
+  background-color: #394263;
+  margin:  3px 3px 3px 3px;
+}
+
+.scatter {
+  grid-area: scatter;
+  background-color: #394263;
+  margin:  3px 3px 3px 3px;
+}
+
+.pie {
+  grid-area: pie;
+  background-color: #394263;
+  margin:  3px 3px 3px 3px;
+}
+
+h5 {
+  color: black;
+  text-align: center;
+  font-size: medium;
+}
+
+.popText {
+  color: black;
+  text-align: left;
+}
+
+div p {
+  color: aliceblue;
+  font-size: medium;
+  text-align: center;
+}
+
+.rightCol {
+  grid-area: rightCol;
+  background-color: #394263;
+}
+
+.main-svg {
+  border-radius: 10px;
+}
+
+.main-svg:hover {
+  transform: scale(1.01);
+}
+
+.mapbox:hover{
+  transform: scale(1.01);
+}
