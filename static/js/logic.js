@@ -20,10 +20,6 @@
     /*d3.csv(HIKE_DATA_FILE_NAME, function(dataset){
         // console.log(dataset);
 
-        function formatNumber(num) {
-            return num.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,')
-        }
-
         // make markers for each hike location, then add a popup to the marker
         for (let i = 0; i < dataset.length; i++){
             lat = dataset[i].Lat;
@@ -336,110 +332,97 @@
 //     })
 // }
 
-// function addTotals(state = 'All'){
-//     d3.csv(HIKE_DATA_FILE_NAME, function(dataset){
-//        // console.log(dataset);
-//        if(state == 'All'){
-//            dataset = dataset;
-//        } else{
-//            dataset = dataset.filter(d => d.State == state)
-//        };
-//        // console.log(dataset)
-//        function countUnique(iterable) {
-//         return new Set(iterable).size;
-//       }
-//         miles = [];
-//         elevations = [];
-//         states = [];
-//         parks = [];
-//         for (let i = 0; i < dataset.length; i++){
-//             mile = dataset[i].Distance;
-//             elevation = dataset[i].Elevation_Gain;
-//             miles.push(parseFloat(mile));
-//             elevations.push(parseFloat(elevation));
-//             states.push(dataset[i].State);
-//             parks.push(dataset[i].Park);
-//         }
-//         let totalHikes = miles.length
-//         let totalMiles = Math.round(miles.reduce((a,b) => a + b,0) * 10)/10;
-//         let totalElevation = elevations.reduce((a,b) => a + b,0);
-        
-//         function formatNumber(num) {
-//             return num.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,')
-//         }
-        
-//         document.getElementById('totalMiles').innerHTML = formatNumber(totalMiles) + ' miles';
-//         document.getElementById('totalElevation').innerHTML = formatNumber(totalElevation) + ' feet';
-        
-//         if (state == 'All'){
-//             document.getElementById('totalStates').innerHTML = countUnique(states);
-//             document.getElementById('totalCounts').textContent = 'Total States visited:'
-//         } else{
-//             document.getElementById('totalStates').innerHTML = countUnique(parks);
-//             document.getElementById('totalCounts').textContent = 'Total Parks visited:'
-//         }
-        
-//     })
-// }
+function addTotals(state = 'All') {
+    if (state == 'All') {
+        getDataFromBackend("totalHikes", "totalHikes");
+        getDataFromBackend("totalMiles", "totalMiles", "miles");
+        getDataFromBackend("totalElevation", "totalElevation", "feet");
+        getDataFromBackend("totalStates", "totalStates");
+    } else {
+        var params = new Map();
+        params.set("state", state);
 
-// function populateDropDown(){
-//     d3.csv(HIKE_DATA_FILE_NAME, function(dataset){
-//         // console.log(dataset);
-//         function countUnique(iterable) {
-//             return new Set(iterable);
-//           }
-//         states = [];
-//         for (let i = 0; i < dataset.length; i++) {
-//             state = dataset[i].State;
-//             states.push(state)
-//         }
-//         states = countUnique(states)
-//         states = Array.from(states).sort()
-//         states.unshift('All')
-//         // console.log(states)
-//         var selectDrop = d3.select('#dropdown')
-//         // console.log(states[0])
-//         selectDrop.selectAll('option')
-//             .data(states)
-//             .enter()
-//             .append('option')
-//             .text(function(d) {return d})
-//             .attr(function(d) {return d})
-//     })
-// };
+        getDataFromBackend("totalMiles", "stateMiles", "miles", params);
+    }
+
+    // TODO: Need to handle converting to total parks when dropdown state is selected
+    // document.getElementById('totalStates').innerHTML = countUnique(parks);
+    // document.getElementById('totalCounts').textContent = 'Total Parks visited:'
+}
 
 // function adjustMap(state = 'All', map){
 //     map.flyTo([map_zooms[`${state}`][0][0], map_zooms[`${state}`][0][1]], map_zooms[`${state}`][1]);
 // };
 
-// // applys filter to dataset to display state specific data, or total data
-// function selectFilter(state){
+// applies filter to dataset to display state specific data, or total data
+function selectFilter(state) {
 //     adjustMap(state, map);
 //     graphScatter(state);
 //     graphPie(state);
 //     populateLog(state);
 //     cumulativeMiles(state);
-//     addTotals(state);
-// };
 
-function getHikeCount() {
-    var hikeCountRequest = new XMLHttpRequest();
-    hikeCountRequest.onreadystatechange = function() {
+    addTotals(state);
+}
+
+// Helper function to add commas to big numbers
+function formatNumber(num) {
+    return num.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,')
+}
+
+function populateDropdown() {
+    var httpRequest = new XMLHttpRequest();
+    httpRequest.onreadystatechange = function() {
         if (this.status == "200") {
-            document.getElementById('totalHikes').innerHTML = this.responseText;
+            console.log(this.response);
+
+            var states = JSON.parse(this.responseText);
+            states.unshift('All')
+            
+            var stateDropdown = document.getElementById("stateDropdown");
+
+            for (j = stateDropdown.options.length - 1; j >= 0; j--) {
+                stateDropdown.remove(j);
+            }
+
+            for (i = 0; i < states.length; i++) {
+                var newOption = document.createElement("option");
+                newOption.text = states[i];
+                newOption.value = states[i];
+
+                stateDropdown.add(newOption);
+            }
         }
     };
 
-    hikeCountRequest.open("GET", "https://script.google.com/macros/s/AKfycbyrtWLsl5f1PXdvarZYoh2GyR_UYKN05k4q9hbtLpP9FHMsjEU/exec?action=get&resource=hikeCount", true);
-    hikeCountRequest.send();
+    httpRequest.open("GET", "https://script.google.com/macros/s/AKfycbyrtWLsl5f1PXdvarZYoh2GyR_UYKN05k4q9hbtLpP9FHMsjEU/exec?action=get&resource=" + "states", true);
+    httpRequest.send();
 }
 
-// initalizing the page to display total hikes
-getHikeCount();
+function getDataFromBackend(documentId, resource, unit = "", extraParameters = new Map()) {
+    var httpRequest = new XMLHttpRequest();
+    httpRequest.onreadystatechange = function() {
+        if (this.status == "200") {
+            document.getElementById(documentId).innerHTML = formatNumber(this.responseText) + " " + unit;
+        }
+    };  
+
+    var url = "https://script.google.com/macros/s/AKfycbyrtWLsl5f1PXdvarZYoh2GyR_UYKN05k4q9hbtLpP9FHMsjEU/exec?action=get&resource=" + resource;
+
+    for (const [k, v] of extraParameters.entries()) {
+        url += "&" + k + "=" + v;
+    }
+
+    httpRequest.open("GET", url, true);
+    httpRequest.send();
+}
+
+// initializing the page to display total hikes
+addTotals();
+populateDropdown();
+
 /*let map = initalizeMap();
-populateDropDown();
 graphScatter();
 graphPie();
 populateLog();
-cumulativeMiles();
-addTotals();*/
+cumulativeMiles();*/
