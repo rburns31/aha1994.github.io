@@ -13,11 +13,23 @@ function doGet(request) {
     return ContentService.createTextOutput(JSON.stringify(getTotalStatesVisited()));
   } else if (request.parameter.resource == "states") {
     return ContentService.createTextOutput(JSON.stringify(getStatesVisited()));
+  } else if (request.parameter.resource == "stateHikes") {
+    if (request.parameter.state == null) {
+      return ContentService.createTextOutput("Please provide a state parameter to use this resource.");
+    } else {
+      return ContentService.createTextOutput(JSON.stringify(getStateHikeCount(request.parameter.state)));
+    }
   } else if (request.parameter.resource == "stateMiles") {
     if (request.parameter.state == null) {
       return ContentService.createTextOutput("Please provide a state parameter to use this resource.");
     } else {
       return ContentService.createTextOutput(JSON.stringify(getStateDistanceHiked(request.parameter.state)));
+    }
+  } else if (request.parameter.resource == "stateElevation") {
+    if (request.parameter.state == null) {
+      return ContentService.createTextOutput("Please provide a state parameter to use this resource.");
+    } else {
+      return ContentService.createTextOutput(JSON.stringify(getStateElevationHiked(request.parameter.state)));
     }
   } else {
     return ContentService.createTextOutput("I don't recognize that resource.");
@@ -27,7 +39,6 @@ function doGet(request) {
 function getTotalHikeCount() {
   var hikeCount = parseInt(sheet.getLastRow() - 1);
   
-  Logger.log(hikeCount);
   return hikeCount;
 }
 
@@ -74,6 +85,21 @@ function getStatesVisited() {
   return [...statesVisited].sort();
 }
 
+function getStateHikeCount(state) {
+  var stateHikeCount = 0;
+  
+  for (i = 2; i <= sheet.getLastRow(); i++) {
+    var currentStateCell = "C" + i;
+    var currentStateValue = sheet.getRange(currentStateCell).getValue();
+    
+    if (currentStateValue == state) {
+      stateHikeCount++;
+    }
+  }
+  
+  return parseInt(stateHikeCount);
+}
+
 function getStateDistanceHiked(state) {
   var stateDistance = 0.0;
   
@@ -90,6 +116,24 @@ function getStateDistanceHiked(state) {
   }
   
   return round(stateDistance, 1);
+}
+
+function getStateElevationHiked(state) {
+  var stateElevation = 0.0;
+  
+  for (i = 2; i <= sheet.getLastRow(); i++) {
+    var currentCell = "G" + i;
+    var currentValue = sheet.getRange(currentCell).getValue();
+    
+    var currentStateCell = "C" + i;
+    var currentStateValue = sheet.getRange(currentStateCell).getValue();
+    
+    if (currentStateValue == state) {
+      stateElevation += currentValue;
+    }
+  }
+  
+  return parseInt(stateElevation);
 }
 
 // Taken from: https://stackoverflow.com/questions/7342957/how-do-you-round-to-1-decimal-place-in-javascript

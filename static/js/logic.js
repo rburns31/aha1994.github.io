@@ -342,7 +342,9 @@ function addTotals(state = 'All') {
         var params = new Map();
         params.set("state", state);
 
+        getDataFromBackend("totalHikes", "stateHikes", "", params);
         getDataFromBackend("totalMiles", "stateMiles", "miles", params);
+        getDataFromBackend("totalElevation", "stateElevation", "feet", params);
     }
 
     // TODO: Need to handle converting to total parks when dropdown state is selected
@@ -374,8 +376,6 @@ function populateDropdown() {
     var httpRequest = new XMLHttpRequest();
     httpRequest.onreadystatechange = function() {
         if (this.status == "200") {
-            console.log(this.response);
-
             var states = JSON.parse(this.responseText);
             states.unshift('All')
             
