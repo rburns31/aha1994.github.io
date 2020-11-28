@@ -31,6 +31,12 @@ function doGet(request) {
     } else {
       return ContentService.createTextOutput(JSON.stringify(getStateElevationHiked(request.parameter.state)));
     }
+  } else if (request.parameter.resource == "totalParks") {
+    if (request.parameter.state == null) {
+      return ContentService.createTextOutput("Please provide a state parameter to use this resource.");
+    } else {
+      return ContentService.createTextOutput(JSON.stringify(getTotalParksVisited(request.parameter.state)));
+    }
   } else {
     return ContentService.createTextOutput("I don't recognize that resource.");
   }
@@ -134,6 +140,24 @@ function getStateElevationHiked(state) {
   }
   
   return parseInt(stateElevation);
+}
+
+function getTotalParksVisited(state) {
+  var parksVisited = new Set();
+  
+  for (i = 2; i <= sheet.getLastRow(); i++) {
+    var currentCell = "E" + i;
+    var currentValue = sheet.getRange(currentCell).getValue();
+    
+    var currentStateCell = "C" + i;
+    var currentStateValue = sheet.getRange(currentStateCell).getValue();
+    
+    if (currentStateValue == state && currentValue != null && currentValue != "") {
+      parksVisited.add(currentValue);
+    }
+  }
+  
+  return parksVisited.size();
 }
 
 // Taken from: https://stackoverflow.com/questions/7342957/how-do-you-round-to-1-decimal-place-in-javascript

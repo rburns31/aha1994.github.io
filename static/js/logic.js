@@ -332,12 +332,14 @@
 //     })
 // }
 
-function addTotals(state = 'All') {
-    if (state == 'All') {
+function addTotals(state = "All") {
+    if (state == "All") {
         getDataFromBackend("totalHikes", "totalHikes");
         getDataFromBackend("totalMiles", "totalMiles", "miles");
         getDataFromBackend("totalElevation", "totalElevation", "feet");
         getDataFromBackend("totalStates", "totalStates");
+
+        document.getElementById('totalCounts').textContent = "Total States Visited:"
     } else {
         var params = new Map();
         params.set("state", state);
@@ -345,25 +347,23 @@ function addTotals(state = 'All') {
         getDataFromBackend("totalHikes", "stateHikes", "", params);
         getDataFromBackend("totalMiles", "stateMiles", "miles", params);
         getDataFromBackend("totalElevation", "stateElevation", "feet", params);
-    }
+        getDataFromBackend("totalStates", "totalParks", "", params);
 
-    // TODO: Need to handle converting to total parks when dropdown state is selected
-    // document.getElementById('totalStates').innerHTML = countUnique(parks);
-    // document.getElementById('totalCounts').textContent = 'Total Parks visited:'
+        document.getElementById('totalCounts').textContent = "Total Parks Visited:"
+    }
 }
 
-// function adjustMap(state = 'All', map){
+// function adjustMap(state = 'All', map) {
 //     map.flyTo([map_zooms[`${state}`][0][0], map_zooms[`${state}`][0][1]], map_zooms[`${state}`][1]);
-// };
+// }
 
 // applies filter to dataset to display state specific data, or total data
 function selectFilter(state) {
-//     adjustMap(state, map);
+    // adjustMap(state, map);
 //     graphScatter(state);
 //     graphPie(state);
 //     populateLog(state);
 //     cumulativeMiles(state);
-
     addTotals(state);
 }
 
