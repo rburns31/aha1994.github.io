@@ -1,6 +1,3 @@
-var ss = SpreadsheetApp.openById("1ATW6D3DzMMeOuWaWqEXTbb8xyrEaCOmTQpsKpa-RZVw");
-var sheet = ss.getActiveSheet();
-
 const DATE_COL = 0;
 const HIKE_COL = 1;
 const STATE_COL = 2;
@@ -13,6 +10,14 @@ const LINK_COL = 8;
 
 // This single method receives all GET requests, and has to conditional on the different endpoints due to limitations in the Google Script internal routing
 function doGet(request) {
+  var userSheets = {
+    "aaron": "1Pnx6iQ4wlqvSXxkbfIV419inI3AVHISyQUL3_Jx4K7Y",
+    "ryan": "1gR1_7ytZUeC73lT_U7_GitdnSDPsGnctbKh6W77jFJQ"
+  };
+  
+  var ss = SpreadsheetApp.openById(userSheets["aaron"]);
+  var sheet = ss.getActiveSheet();
+  
   var fullSheet = sheet.getRange(2, 1, sheet.getLastRow() -  1, 9).getValues();
   
   if (request.parameter.resource == "totalHikes") {
@@ -120,7 +125,7 @@ function getStatesVisited(fullSheet) {
   var statesVisited = new Set();
   
   for (var row in fullSheet) {
-    var currentState = fullSheet[row][STATE_COL];
+    var currentState = fullSheet[row][STATE_COL].trim();
     
     statesVisited.add(currentState);
   }
@@ -132,7 +137,7 @@ function getStateHikeCount(fullSheet, state) {
   var stateHikeCount = 0;
   
   for (var row in fullSheet) {
-    var currentStateValue = fullSheet[row][STATE_COL];
+    var currentStateValue = fullSheet[row][STATE_COL].trim();
     
     if (currentStateValue == state) {
       stateHikeCount++;
@@ -146,7 +151,7 @@ function getStateDistanceHiked(fullSheet, state) {
   var stateDistance = 0.0;
 
   for (var row in fullSheet) {
-    var currentStateValue = fullSheet[row][STATE_COL];
+    var currentStateValue = fullSheet[row][STATE_COL].trim();
     var currentDistance = fullSheet[row][DISTANCE_COL];
     
     if (currentStateValue == state) {
@@ -161,7 +166,7 @@ function getStateElevationHiked(fullSheet, state) {
   var stateElevation = 0.0;
   
   for (var row in fullSheet) {
-    var currentStateValue = fullSheet[row][STATE_COL];
+    var currentStateValue = fullSheet[row][STATE_COL].trim();
     var currentElevation = fullSheet[row][ELEVATION_COL];
     
     if (currentStateValue == state) {
@@ -176,8 +181,8 @@ function getTotalParksVisited(fullSheet, state) {
   var parksVisited = new Set();
   
   for (var row in fullSheet) {
-    var currentStateValue = fullSheet[row][STATE_COL];
-    var currentPark = fullSheet[row][PARK_COL];
+    var currentStateValue = fullSheet[row][STATE_COL].trim();
+    var currentPark = fullSheet[row][PARK_COL].trim();
     
     if (currentPark == null || currentPark == "") {
       currentPark = "Unknown";
@@ -195,7 +200,7 @@ function getHikesByState(fullSheet) {
   var hikesByState = new Map();
   
   for (var row in fullSheet) {
-    var currentStateValue = fullSheet[row][STATE_COL];
+    var currentStateValue = fullSheet[row][STATE_COL].trim();
     
     if (hikesByState.has(currentStateValue)) {
       hikesByState.set(currentStateValue, hikesByState.get(currentStateValue) + 1);
@@ -220,8 +225,8 @@ function getHikesByPark(fullSheet, state) {
   var hikesByPark = new Map();
   
   for (var row in fullSheet) {
-    var currentStateValue = fullSheet[row][STATE_COL];
-    var currentPark = fullSheet[row][PARK_COL];
+    var currentStateValue = fullSheet[row][STATE_COL].trim();
+    var currentPark = fullSheet[row][PARK_COL].trim();
     
     if (currentPark == null || currentPark == "") {
       currentPark = "Unknown";
@@ -280,7 +285,7 @@ function getStateCumulativeMilesByDate(fullSheet, state) {
   for (var row in fullSheet) {
     var currentDate = fullSheet[row][DATE_COL];
     var currentDistance = fullSheet[row][DISTANCE_COL];
-    var currentState = fullSheet[row][STATE_COL];
+    var currentState = fullSheet[row][STATE_COL].trim();
     
     if (state == currentState) {
       cumulativeMiles += currentDistance;
@@ -306,10 +311,10 @@ function getAllHikes(fullSheet) {
   
   for (var row in fullSheet) {
     response.unshift({
-      "date": fullSheet[row][DATE_COL].toLocaleDateString("en-US"),
+      "date": new Date(fullSheet[row][DATE_COL]).toLocaleDateString("en-US"),
       "hike": fullSheet[row][HIKE_COL],
-      "state": fullSheet[row][STATE_COL],
-      "park": fullSheet[row][PARK_COL],
+      "state": fullSheet[row][STATE_COL].trim(),
+      "park": fullSheet[row][PARK_COL].trim(),
       "distance": fullSheet[row][DISTANCE_COL],
       "elevation": fullSheet[row][ELEVATION_COL],
       "latitude": fullSheet[row][LAT_COL],
@@ -325,14 +330,14 @@ function getStateHikes(fullSheet, state) {
   var response = [];
   
   for (var row in fullSheet) {
-    var currentState = fullSheet[row][STATE_COL];
+    var currentState = fullSheet[row][STATE_COL].trim();
     
     if (currentState == state) {
       response.unshift({
         "date": fullSheet[row][DATE_COL].toLocaleDateString("en-US"),
         "hike": fullSheet[row][HIKE_COL],
         "state": currentState,
-        "park": fullSheet[row][PARK_COL],
+        "park": fullSheet[row][PARK_COL].trim(),
         "distance": fullSheet[row][DISTANCE_COL],
         "elevation": fullSheet[row][ELEVATION_COL],
         "latitude": fullSheet[row][LAT_COL],
