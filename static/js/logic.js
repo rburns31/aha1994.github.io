@@ -38,112 +38,98 @@ function initializeMap() {
 }
 
 function graphScatter(state = "All") {
-    // TODO: Handle state filter
-
     var httpRequest = new XMLHttpRequest();
-    httpRequest.onreadystatechange = function() {
-        if (this.status == "200") {
-            var responseBody = JSON.parse(this.responseText);
-
-            var distances = [];
-            var elevations = [];
-            for (i in responseBody) {
-                distances.push(responseBody[i]["distance"]);
-                elevations.push(responseBody[i]["elevation"]);
-            }
-
-            var trace1 = {
-                x: distances,
-                y: elevations,
-                mode: "markers",
-                type: "scatter",
-            };
-        
-            var data = [trace1]
-        
-            var scatterDiv = document.getElementById("scatter");
-        
-            var layout = {
-                autosize: false,
-                height: scatterDiv.clientHeight,
-                width: scatterDiv.clientWidth,
-                margin: {
-                    l: 50,
-                    r: 45,
-                    b: 35,
-                    t: 40,
-                    pad: 4
-                },
-                title: "Miles Hiked vs Feet Hiked",
-                paper_bgcolor: "#648ca6"
-            };
-        
-            Plotly.newPlot("scatter", data, layout);
-        }
-    };
 
     if (state == "All") {
-        httpRequest.open("GET", API_BASE_URL + "allHikes", true);
+        httpRequest.onreadystatechange = function() {
+            if (this.status == "200") {
+                var responseBody = JSON.parse(this.responseText);
+
+                var distances = [];
+                var elevations = [];
+                for (i in responseBody) {
+                    distances.push(responseBody[i]["distance"]);
+                    elevations.push(responseBody[i]["elevation"]);
+                }
+
+                var trace1 = {
+                    x: distances,
+                    y: elevations,
+                    mode: "markers",
+                    type: "scatter",
+                };
+            
+                var data = [trace1]
+            
+                scatterHelper(data);
+            }
+        };
     } else {
-        //httpRequest.open("GET", API_BASE_URL + "stateHikes&state=" + state, true);
+        httpRequest.onreadystatechange = function() {
+            if (this.status == "200") {
+                var responseBody = JSON.parse(this.responseText);
+
+                var otherDistances = [];
+                var otherElevations = [];
+                var stateDistances = [];
+                var stateElevations = [];
+                for (i in responseBody) {
+                    if (responseBody[i]["state"] == state) {
+                        stateDistances.push(responseBody[i]["distance"]);
+                        stateElevations.push(responseBody[i]["elevation"]);
+                    } else {
+                        otherDistances.push(responseBody[i]["distance"]);
+                        otherElevations.push(responseBody[i]["elevation"]);
+                    }
+                }
+
+                var traceState = {
+                    x: stateDistances,
+                    y: stateElevations,
+                    mode: 'markers',
+                    type: 'scatter',
+                    name: `${state}`
+                };
+
+                var traceOther = {
+                    x: otherDistances,
+                    y: otherElevations,
+                    mode: 'markers',
+                    type: 'scatter',
+                    name: 'Other State'
+                };
+
+                data = [traceOther, traceState];
+            
+                scatterHelper(data);
+            }
+        };
     }
 
+    httpRequest.open("GET", API_BASE_URL + "allHikes", true);
     httpRequest.send();
+}
 
-
-//         } else{
-//             stateDF = dataset.filter(d => d.State == state);
-//             otherDF = dataset.filter(d => d.State !== state);
-//             var myDiv = document.getElementById("scatter");
-
-//             let x_axis_state = [];
-//             let y_axis_state = [];
-//             let x_axis_other = [];
-//             let y_axis_other = [];
-
-//             for (let i = 0; i < stateDF.length; i++){
-//                 x_axis_state.push(parseFloat(stateDF[i].Distance));
-//                 y_axis_state.push(parseFloat(stateDF[i].Elevation_Gain));
-//             };
+function scatterHelper(data) {
+    var scatterDiv = document.getElementById("scatter");
             
-//             for (let i = 0; i < otherDF.length; i++){
-//                 x_axis_other.push(parseFloat(otherDF[i].Distance));
-//                 y_axis_other.push(parseFloat(otherDF[i].Elevation_Gain));
-//             };
-//             var traceState = {
-//                 x: x_axis_state,
-//                 y: y_axis_state,
-//                 mode: 'markers',
-//                 type: 'scatter',
-//                 name: `${state}`
-//             };
-//             var traceOther = {
-//                 x: x_axis_other,
-//                 y: y_axis_other,
-//                 mode: 'markers',
-//                 type: 'scatter',
-//                 name: 'Other State'
-//             };
-//             data = [traceOther, traceState];
-//             var layout = {
-//                 autosize: false,
-//                 height: myDiv.clientHeight,
-//                 width: myDiv.clientWidth,
-//                 margin: {
-//                     l: 50,
-//                     r: 45,
-//                     b: 35,
-//                     t: 40,
-//                     pad: 4
-//                 },
-//                 title: 'Miles Hiked vs Feet Hiked',
-//                 paper_bgcolor: '#648ca6',
-//                 showlegend: false,
-//             };
-//             Plotly.newPlot('scatter', data, layout)
-//         };
+    var layout = {
+        autosize: false,
+        height: scatterDiv.clientHeight,
+        width: scatterDiv.clientWidth,
+        margin: {
+            l: 50,
+            r: 45,
+            b: 35,
+            t: 40,
+            pad: 4
+        },
+        title: "Miles Hiked vs Feet Hiked",
+        paper_bgcolor: "#648ca6",
+        showlegend: false
+    };
 
-//     })
+    Plotly.newPlot("scatter", data, layout);
 }
 
 function graphPie(state = "All") {
