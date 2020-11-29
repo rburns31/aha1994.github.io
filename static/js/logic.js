@@ -16,23 +16,32 @@ function initializeMap() {
         accessToken: API_KEY
     }).addTo(map);
 
-    /*
     // make markers for each hike location, then add a popup to the marker
-    for (let i = 0; i < dataset.length; i++){
-        lat = dataset[i].Lat;
-        lon = dataset[i].Lon;
-        let m = L.marker([lat,lon]).addTo(map);
-        let p = L.popup({keepInView: true})
-                    .setLatLng([dataset[i].Lat,dataset[i].Lon])
-                    .setContent('<h3>' + dataset[i].Hike + ', ' + dataset[i].Park + '</h3>' + 
-                                '<h6 id="popText">' + 'Distance: '+ formatNumber(dataset[i].Distance) + '</h6>' +
-                                '<h6 id="popText">' + 'Elevation: '+ formatNumber(dataset[i].Elevation_Gain) + '</h6>' +
-                                "<a href='" + dataset[i].Url + "'>Visit the Hike Here!</a>"
-        );
-        m.bindPopup(p);
-    }
-        
-    });*/
+    var httpRequest = new XMLHttpRequest();
+    httpRequest.onreadystatechange = function() {
+        if (this.status == "200") {
+            var responseBody = JSON.parse(this.responseText);
+
+            for (i in responseBody) {
+                var lat = responseBody[i]["latitude"];
+                var lon = responseBody[i]["longitude"];
+                var marker = L.marker([lat, lon]).addTo(map);
+
+                let popup = L.popup({keepInView: true})
+                    .setLatLng([lat, lon])
+                    .setContent('<h3>' + responseBody[i]["hike"] + ', ' + responseBody[i]["park"] + '</h3>' + 
+                                '<h6 id="popText">' + 'Distance: '+ formatNumber(responseBody[i]["distance"]) + '</h6>' +
+                                '<h6 id="popText">' + 'Elevation: '+ formatNumber(responseBody[i]["elevation"]) + '</h6>' +
+                                "<a href='" + responseBody[i]["link"] + "'>Visit the Hike Here!</a>"
+                );
+
+                marker.bindPopup(popup);
+            }
+        }
+    };
+
+    httpRequest.open("GET", API_BASE_URL + "allHikes", true);
+    httpRequest.send();
 
     return map;
 }

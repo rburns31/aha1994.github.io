@@ -311,7 +311,10 @@ function getAllHikes(fullSheet) {
       "state": fullSheet[row][STATE_COL],
       "park": fullSheet[row][PARK_COL],
       "distance": fullSheet[row][DISTANCE_COL],
-      "elevation": fullSheet[row][ELEVATION_COL]
+      "elevation": fullSheet[row][ELEVATION_COL],
+      "latitude": fullSheet[row][LAT_COL],
+      "longitude": fullSheet[row][LON_COL],
+      "link": fullSheet[row][LINK_COL]
     });
   }
   
@@ -331,7 +334,10 @@ function getStateHikes(fullSheet, state) {
         "state": currentState,
         "park": fullSheet[row][PARK_COL],
         "distance": fullSheet[row][DISTANCE_COL],
-        "elevation": fullSheet[row][ELEVATION_COL]
+        "elevation": fullSheet[row][ELEVATION_COL],
+        "latitude": fullSheet[row][LAT_COL],
+        "longitude": fullSheet[row][LON_COL],
+        "link": fullSheet[row][LINK_COL]
       });
     }
   }
