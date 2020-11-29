@@ -57,6 +57,8 @@ function doGet(request) {
     } else {
       return ContentService.createTextOutput(JSON.stringify(getHikesByPark(fullSheet, request.parameter.state)));
     }
+  } else if (request.parameter.resource == "cumulativeMilesByDate") {
+    return ContentService.createTextOutput(JSON.stringify(getCumulativeMilesByDate(fullSheet)));
   } else {
     return ContentService.createTextOutput("I don't recognize that resource.");
   }
@@ -229,6 +231,31 @@ function getHikesByPark(fullSheet, state) {
     });
   }
   
+  return response;
+}
+
+function getCumulativeMilesByDate(fullSheet) {
+  var cumulativeMilesByDate = new Map();
+  var cumulativeMiles = 0.0;
+  
+  for (var row in fullSheet) {
+    var currentDate = fullSheet[row][DATE_COL];
+    var currentDistance = fullSheet[row][DISTANCE_COL];
+    
+    cumulativeMiles += currentDistance;
+    
+    cumulativeMilesByDate.set(currentDate, cumulativeMiles);
+  }
+
+  var response = [];
+    
+  for (const [k, v] of cumulativeMilesByDate.entries()) {
+    response.push({
+      "date": k,
+      "cumulativeMiles": v,
+    });
+  }
+
   return response;
 }
 

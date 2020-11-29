@@ -165,6 +165,38 @@ function graphPie(state = 'All') {
     httpRequest.send();
 }
 
+function graphPieHelper(title, hikesByEntity) {
+    var hikesByStatePieChart = document.getElementById("pie");
+
+    let data = [{
+        values: [...hikesByEntity.values()],
+        labels: [...hikesByEntity.keys()],
+        type: 'pie',
+        textinfo: 'label',
+        textposition: 'outside',
+    }];
+
+    let layout = {
+        showlegend: false,
+        autosize: false,
+        height: hikesByStatePieChart.clientHeight,
+        width: hikesByStatePieChart.clientWidth,
+        margin: {
+            l: 30,
+            r: 40,
+            b: 30,
+            t: 40,
+            pad: 4
+        },
+        title: title,
+        plot_bgcolor: "cyan",
+        paper_bgcolor: "#648ca6",
+        colorway : ['F18A3F', 'F16A45', 'F04C4B', 'EF506F', 'EE5692', 'ED5BB2', 'EC61D0', 'EA66EB', 'CF6BEA', 'B770E9', 'A276E8', '8F7BE7', '8082E6', '859BE5', '8AB1E4', '8FC4E3', '94D5E2', '99E1DF', '9EE0D0', 'A3E0C5']
+    };
+
+    Plotly.newPlot('pie', data, layout);
+}
+
 // function populateLog(state = 'All'){
 //     Plotly.d3.csv(HIKE_DATA_FILE_NAME, function(err,rows){
 //         function unpack(rows, key) {
@@ -230,83 +262,47 @@ function graphPie(state = 'All') {
 //     })
 // }
 
-// function cumulativeMiles(state = 'All'){
-//     d3.csv(HIKE_DATA_FILE_NAME, function(dataset){
-//         // console.log(dataset);
-//         if(state == 'All'){
-//             dataset = dataset;
-//         } else{
-//             dataset = dataset.filter(d => d.State == state)
-//         };
+function cumulativeMiles(state = 'All') {
+    var httpRequest = new XMLHttpRequest();
 
-//         dates = [];
-//         miles = [];
-//         date_strings = [];
-//         for (let i = 0; i < dataset.length; i++){
-//             date = dataset[i].Date;
-//             dist = dataset[i].Distance;
-//             date_strings.push(date)
-//             dates.push(Date.parse(date));
-//             miles.push(parseFloat(dist));
-//         };
-//         // console.log(date_strings)
-//         cumulative_miles = [];
-//         miles.reduce(function(a,b,i) { return cumulative_miles[i] = a+b; },0);
+    httpRequest.onreadystatechange = function() {
+        if (this.status == "200") {
+            var responseBody = JSON.parse(this.responseText);
 
-//         let data = [{
-//             x: date_strings,
-//             y: cumulative_miles,
-//             type: 'scatter',
-//         }];
+            var cumulativeMilesByDate = new Map();
+            for (i in responseBody) {
+                cumulativeMilesByDate.set(responseBody[i]["date"], parseInt(responseBody[i]["cumulativeMiles"]));
+            }
 
-//         var layout = {
-//             title: "Cumulative Miles Hiked",
-//             margin: {
-//                 l: 30,
-//                 r: 20,
-//                 b: 40,
-//                 t: 30,
-//                 pad: 4
-//             },
-//             paper_bgcolor: '#648ca6',
-            
-//         };
+            let data = [{
+                x: [...cumulativeMilesByDate.keys()],
+                y: [...cumulativeMilesByDate.values()],
+                type: 'scatter',
+            }];
+        
+            var layout = {
+                title: "Cumulative Miles Hiked",
+                margin: {
+                    l: 30,
+                    r: 20,
+                    b: 40,
+                    t: 30,
+                    pad: 4
+                },
+                paper_bgcolor: '#648ca6',
+            };
+        
+            Plotly.newPlot('cumulative', data, layout);
+        }
+    }
 
-//         Plotly.newPlot('cumulative', data, layout)
+    if (state == "All") {
+        httpRequest.open("GET", API_BASE_URL + "cumulativeMilesByDate", true);
+    } else {
+        //httpRequest.open("GET", API_BASE_URL + "stateCumulativeMilesByDate&state=" + state, true);
+    }
 
-//     })
-// }
-
-function graphPieHelper(title, hikesByEntity) {
-    var hikesByStatePieChart = document.getElementById("pie");
-
-    let data = [{
-        values: [...hikesByEntity.values()],
-        labels: [...hikesByEntity.keys()],
-        type: 'pie',
-        textinfo: 'label',
-        textposition: 'outside',
-    }];
-
-    let layout = {
-        showlegend: false,
-        autosize: false,
-        height: hikesByStatePieChart.clientHeight,
-        width: hikesByStatePieChart.clientWidth,
-        margin: {
-            l: 30,
-            r: 40,
-            b: 30,
-            t: 40,
-            pad: 4
-        },
-        title: title,
-        plot_bgcolor: "cyan",
-        paper_bgcolor: "#648ca6",
-        colorway : ['F18A3F', 'F16A45', 'F04C4B', 'EF506F', 'EE5692', 'ED5BB2', 'EC61D0', 'EA66EB', 'CF6BEA', 'B770E9', 'A276E8', '8F7BE7', '8082E6', '859BE5', '8AB1E4', '8FC4E3', '94D5E2', '99E1DF', '9EE0D0', 'A3E0C5']
-    };
-
-    Plotly.newPlot('pie', data, layout);
+    httpRequest.send();
 }
 
 function addTotals(state = "All") {
@@ -340,7 +336,7 @@ function selectFilter(state) {
 //     graphScatter(state);
     graphPie(state);
 //     populateLog(state);
-//     cumulativeMiles(state);
+    cumulativeMiles(state);
     addTotals(state);
 }
 
@@ -399,7 +395,7 @@ addTotals();
 populateDropdown();
 initializeMap();
 graphPie();
+cumulativeMiles();
 
 /*graphScatter();
-populateLog();
-cumulativeMiles();*/
+populateLog();*/
