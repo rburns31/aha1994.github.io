@@ -299,7 +299,7 @@ function cumulativeMiles(state = 'All') {
     if (state == "All") {
         httpRequest.open("GET", API_BASE_URL + "cumulativeMilesByDate", true);
     } else {
-        //httpRequest.open("GET", API_BASE_URL + "stateCumulativeMilesByDate&state=" + state, true);
+        httpRequest.open("GET", API_BASE_URL + "stateCumulativeMilesByDate&state=" + state, true);
     }
 
     httpRequest.send();

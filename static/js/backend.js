@@ -59,6 +59,12 @@ function doGet(request) {
     }
   } else if (request.parameter.resource == "cumulativeMilesByDate") {
     return ContentService.createTextOutput(JSON.stringify(getCumulativeMilesByDate(fullSheet)));
+  } else if (request.parameter.resource == "stateCumulativeMilesByDate") {
+    if (request.parameter.state == null) {
+      return ContentService.createTextOutput("Please provide a state parameter to use this resource.");
+    } else {
+      return ContentService.createTextOutput(JSON.stringify(getStateCumulativeMilesByDate(fullSheet, request.parameter.state)));
+    }
   } else {
     return ContentService.createTextOutput("I don't recognize that resource.");
   }
@@ -245,6 +251,34 @@ function getCumulativeMilesByDate(fullSheet) {
     cumulativeMiles += currentDistance;
     
     cumulativeMilesByDate.set(currentDate, cumulativeMiles);
+  }
+
+  var response = [];
+    
+  for (const [k, v] of cumulativeMilesByDate.entries()) {
+    response.push({
+      "date": k,
+      "cumulativeMiles": v,
+    });
+  }
+
+  return response;
+}
+
+function getStateCumulativeMilesByDate(fullSheet, state) {
+  var cumulativeMilesByDate = new Map();
+  var cumulativeMiles = 0.0;
+  
+  for (var row in fullSheet) {
+    var currentDate = fullSheet[row][DATE_COL];
+    var currentDistance = fullSheet[row][DISTANCE_COL];
+    var currentState = fullSheet[row][STATE_COL];
+    
+    if (state == currentState) {
+      cumulativeMiles += currentDistance;
+      
+      cumulativeMilesByDate.set(currentDate, cumulativeMiles);
+    }
   }
 
   var response = [];
