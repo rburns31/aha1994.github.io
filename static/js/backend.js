@@ -25,7 +25,7 @@ function doGet(request) {
     return ContentService.createTextOutput(JSON.stringify(getTotalStatesVisited(fullSheet)));
   } else if (request.parameter.resource == "states") {
     return ContentService.createTextOutput(JSON.stringify(getStatesVisited(fullSheet)));
-  } else if (request.parameter.resource == "stateHikes") {
+  } else if (request.parameter.resource == "stateHikeCount") {
     if (request.parameter.state == null) {
       return ContentService.createTextOutput("Please provide a state parameter to use this resource.");
     } else {
@@ -64,6 +64,14 @@ function doGet(request) {
       return ContentService.createTextOutput("Please provide a state parameter to use this resource.");
     } else {
       return ContentService.createTextOutput(JSON.stringify(getStateCumulativeMilesByDate(fullSheet, request.parameter.state)));
+    }
+  } else if (request.parameter.resource == "allHikes") {
+    return ContentService.createTextOutput(JSON.stringify(getAllHikes(fullSheet)));
+  } else if (request.parameter.resource == "stateHikes") {
+    if (request.parameter.state == null) {
+      return ContentService.createTextOutput("Please provide a state parameter to use this resource.");
+    } else {
+      return ContentService.createTextOutput(JSON.stringify(getStateHikes(fullSheet, request.parameter.state)));
     }
   } else {
     return ContentService.createTextOutput("I don't recognize that resource.");
@@ -290,6 +298,44 @@ function getStateCumulativeMilesByDate(fullSheet, state) {
     });
   }
 
+  return response;
+}
+
+function getAllHikes(fullSheet) {
+  var response = [];
+  
+  for (var row in fullSheet) {
+    response.unshift({
+      "date": fullSheet[row][DATE_COL].toLocaleDateString("en-US"),
+      "hike": fullSheet[row][HIKE_COL],
+      "state": fullSheet[row][STATE_COL],
+      "park": fullSheet[row][PARK_COL],
+      "distance": fullSheet[row][DISTANCE_COL],
+      "elevation": fullSheet[row][ELEVATION_COL]
+    });
+  }
+  
+  return response;
+}
+
+function getStateHikes(fullSheet, state) {
+  var response = [];
+  
+  for (var row in fullSheet) {
+    var currentState = fullSheet[row][STATE_COL];
+    
+    if (currentState == state) {
+      response.unshift({
+        "date": fullSheet[row][DATE_COL].toLocaleDateString("en-US"),
+        "hike": fullSheet[row][HIKE_COL],
+        "state": currentState,
+        "park": fullSheet[row][PARK_COL],
+        "distance": fullSheet[row][DISTANCE_COL],
+        "elevation": fullSheet[row][ELEVATION_COL]
+      });
+    }
+  }
+  
   return response;
 }
 

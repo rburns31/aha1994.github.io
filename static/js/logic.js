@@ -127,7 +127,7 @@ function initializeMap() {
 //     })
 // };
 
-function graphPie(state = 'All') {
+function graphPie(state = "All") {
     var httpRequest = new XMLHttpRequest();
 
     if (state == "All") {
@@ -171,9 +171,9 @@ function graphPieHelper(title, hikesByEntity) {
     let data = [{
         values: [...hikesByEntity.values()],
         labels: [...hikesByEntity.keys()],
-        type: 'pie',
-        textinfo: 'label',
-        textposition: 'outside',
+        type: "pie",
+        textinfo: "label",
+        textposition: "outside",
     }];
 
     let layout = {
@@ -194,75 +194,81 @@ function graphPieHelper(title, hikesByEntity) {
         colorway : ['F18A3F', 'F16A45', 'F04C4B', 'EF506F', 'EE5692', 'ED5BB2', 'EC61D0', 'EA66EB', 'CF6BEA', 'B770E9', 'A276E8', '8F7BE7', '8082E6', '859BE5', '8AB1E4', '8FC4E3', '94D5E2', '99E1DF', '9EE0D0', 'A3E0C5']
     };
 
-    Plotly.newPlot('pie', data, layout);
+    Plotly.newPlot("pie", data, layout);
 }
 
-// function populateLog(state = 'All'){
-//     Plotly.d3.csv(HIKE_DATA_FILE_NAME, function(err,rows){
-//         function unpack(rows, key) {
-//             return rows.map(function(row) { return row[key]; });
-//         };
+function populateLog(state = "All") {
+    var httpRequest = new XMLHttpRequest();
+    httpRequest.onreadystatechange = function() {
+        if (this.status == "200") {
+            var responseBody = JSON.parse(this.responseText);
+            
+            var dates = [];
+            var hikes = [];
+            var states = [];
+            var parks = [];
+            var distances = [];
+            var elevations = [];
+            for (i in responseBody) {
+                dates.push(responseBody[i]["date"]);
+                hikes.push(responseBody[i]["hike"]);
+                states.push(responseBody[i]["state"]);
+                parks.push(responseBody[i]["park"]);
+                distances.push(responseBody[i]["distance"]);
+                elevations.push(responseBody[i]["elevation"]);
+            }
 
-//         if(state == 'All'){
-//             rows = rows;
-//         } else{
-//             rows = rows.filter(r => r.State == state)
-//         };
+            var cellValues = [dates, hikes, states, parks, distances, elevations];
+            var headers = ["Date", "Hike", "State", "Park", "Distance", "Elevation"];
 
-//         var headerNames = Plotly.d3.keys(rows[0]);
-//         var wantedNames = headerNames.slice(0,7);
-//         wantedNames.splice(3,1);
-//         var headerValues = [];
-//         var cellValues = [];
-//         for (i = 0; i < wantedNames.length; i++) {
-//             headerValue = [wantedNames[i]];
-//             headerValues[i] = headerValue;
-//             cellValue = unpack(rows, wantedNames[i]);
-//             cellValues[i] = cellValue;
-//         };
+            var data = [{
+                type: "table",
+                columnwidth: [500, 1000, 1000, 1000, 400, 600],
+                columnorder: [0, 1, 2, 3, 4, 5],
+                header: {
+                    values: headers,
+                    align: "center",
+                    line: {width: 1, color: "rgb(50, 50, 50)"},
+                    fill: {color: ["F18A3F"]},
+                    font: {family: "Arial", size: 8, color: "white"}
+                },
+                cells: {
+                    values: cellValues,
+                    align: ["center", "center"],
+                    line: {color: "black", width: 1},
+                    fill: {color: ["rgba(228, 222, 249, 0.65)', 'rgba(228, 222, 249, 0.65)"]},
+                    font: {family: "Arial", size: 9, color: ["black"]}
+                }
+            }];
 
-//         // Have this for loop run in order to make the table show
-//         // most recent event at the top
-//         for (i = 0; i < cellValues.length; i++){
-//             cellValues[i] = cellValues[i].reverse()
-//         };
-//         var data = [{
-//             type: 'table',
-//             columnwidth: [500,1000,1000,1000,400,600],
-//             columnorder: [0,1,2,3,4,5],
-//             header: {
-//               values: headerValues,
-//               align: "center",
-//               line: {width: 1, color: 'rgb(50, 50, 50)'},
-//               fill: {color: ['F18A3F']},
-//               font: {family: "Arial", size: 8, color: "white"}
-//             },
-//             cells: {
-//               values: cellValues,
-//               align: ["center", "center"],
-//               line: {color: "black", width: 1},
-//               fill: {color: ['rgba(228, 222, 249, 0.65)', 'rgba(228, 222, 249, 0.65)']},
-//               font: {family: "Arial", size: 9, color: ["black"]}
-//             }
-//         }];
-//         var layout = {
-//             title: "Aaron's Hiking Log",
-//             margin: {
-//                 l: 0,
-//                 r: 0,
-//                 b: 0,
-//                 t: 30,
-//                 pad: 4
-//             },
-//             paper_bgcolor: '#648ca6',
-//         };
-//         var config = {responsive: true,autosize: true}
-//         Plotly.newPlot('log', data, layout, config);
-        
-//     })
-// }
+            var layout = {
+                title: "Log",
+                margin: {
+                    l: 0,
+                    r: 0,
+                    b: 0,
+                    t: 30,
+                    pad: 4
+                },
+                paper_bgcolor: "#648ca6",
+            };
 
-function cumulativeMiles(state = 'All') {
+            var config = {responsive: true, autosize: true}
+
+            Plotly.newPlot("log", data, layout, config);
+        }
+    };
+
+    if (state == "All") {
+        httpRequest.open("GET", API_BASE_URL + "allHikes", true);
+    } else {
+        httpRequest.open("GET", API_BASE_URL + "stateHikes&state=" + state, true);
+    }
+
+    httpRequest.send();
+}
+
+function cumulativeMiles(state = "All") {
     var httpRequest = new XMLHttpRequest();
 
     httpRequest.onreadystatechange = function() {
@@ -277,7 +283,7 @@ function cumulativeMiles(state = 'All') {
             let data = [{
                 x: [...cumulativeMilesByDate.keys()],
                 y: [...cumulativeMilesByDate.values()],
-                type: 'scatter',
+                type: "scatter",
             }];
         
             var layout = {
@@ -289,10 +295,10 @@ function cumulativeMiles(state = 'All') {
                     t: 30,
                     pad: 4
                 },
-                paper_bgcolor: '#648ca6',
+                paper_bgcolor: "#648ca6",
             };
         
-            Plotly.newPlot('cumulative', data, layout);
+            Plotly.newPlot("cumulative", data, layout);
         }
     }
 
@@ -312,17 +318,17 @@ function addTotals(state = "All") {
         getDataFromBackend("totalElevation", "totalElevation", "feet");
         getDataFromBackend("totalStates", "totalStates");
 
-        document.getElementById('totalCounts').textContent = "Total States Visited:"
+        document.getElementById("totalCounts").textContent = "Total States Visited:"
     } else {
         var params = new Map();
         params.set("state", state);
 
-        getDataFromBackend("totalHikes", "stateHikes", "", params);
+        getDataFromBackend("totalHikes", "stateHikeCount", "", params);
         getDataFromBackend("totalMiles", "stateMiles", "miles", params);
         getDataFromBackend("totalElevation", "stateElevation", "feet", params);
         getDataFromBackend("totalStates", "totalParks", "", params);
 
-        document.getElementById('totalCounts').textContent = "Total Parks Visited:"
+        document.getElementById("totalCounts").textContent = "Total Parks Visited:"
     }
 }
 
@@ -330,27 +336,12 @@ function addTotals(state = "All") {
 //     map.flyTo([MAP_ZOOMS[`${state}`][0][0], MAP_ZOOMS[`${state}`][0][1]], MAP_ZOOMS[`${state}`][1]);
 // }
 
-// applies filter to dataset to display state specific data, or total data
-function selectFilter(state) {
-    // adjustMap(state, map);
-//     graphScatter(state);
-    graphPie(state);
-//     populateLog(state);
-    cumulativeMiles(state);
-    addTotals(state);
-}
-
-// Helper function to add commas to big numbers
-function formatNumber(num) {
-    return num.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,')
-}
-
 function populateDropdown() {
     var httpRequest = new XMLHttpRequest();
     httpRequest.onreadystatechange = function() {
         if (this.status == "200") {
             var states = JSON.parse(this.responseText);
-            states.unshift('All')
+            states.unshift("All");
             
             var stateDropdown = document.getElementById("stateDropdown");
 
@@ -390,12 +381,27 @@ function getDataFromBackend(documentId, resource, unit = "", extraParameters = n
     httpRequest.send();
 }
 
+// applies filter to dataset to display state specific data, or total data
+function selectFilter(state) {
+    // adjustMap(state, map);
+//     graphScatter(state);
+    graphPie(state);
+    populateLog(state);
+    cumulativeMiles(state);
+    addTotals(state);
+}
+
+// Helper function to add commas to big numbers
+function formatNumber(num) {
+    return num.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,')
+}
+
 // initializing the page to display total hikes
 addTotals();
 populateDropdown();
 initializeMap();
 graphPie();
 cumulativeMiles();
+populateLog();
 
-/*graphScatter();
-populateLog();*/
+//graphScatter();
