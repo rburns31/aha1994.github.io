@@ -1,20 +1,20 @@
-//const HIKE_DATA_FILE_NAME = './static/data/hike_data.csv';
+const API_BASE_URL = "https://script.google.com/macros/s/AKfycbyrtWLsl5f1PXdvarZYoh2GyR_UYKN05k4q9hbtLpP9FHMsjEU/exec?action=get&resource=";
 
 // Initializing map tile, view tile, and geojson tile
-//function initalizeMap() {
-    // var map = L.map("map", {
-    //     center: [39.5, -98.35],
-    //     zoom: 4,
-    //     attributionControl: false,
-    // });
+function initializeMap() {
+    var map = L.map("map", {
+        center: [39.5, -98.35],
+        zoom: 4,
+        attributionControl: false,
+    });
 
-    // // Adding tile layer
-    // L.tileLayer("https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}", {
-    //     attribution: "Map data &copy; <a href=\"https://www.openstreetmap.org/\">OpenStreetMap</a> contributors, <a href=\"https://creativecommons.org/licenses/by-sa/2.0/\">CC-BY-SA</a>, Imagery © <a href=\"https://www.mapbox.com/\">Mapbox</a>",
-    //     maxZoom: 18,
-    //     id: "mapbox.streets",
-    //     accessToken: API_KEY
-    // }).addTo(map);
+    // Adding tile layer
+    L.tileLayer("https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}", {
+        attribution: "Map data &copy; <a href=\"https://www.openstreetmap.org/\">OpenStreetMap</a> contributors, <a href=\"https://creativecommons.org/licenses/by-sa/2.0/\">CC-BY-SA</a>, Imagery © <a href=\"https://www.mapbox.com/\">Mapbox</a>",
+        maxZoom: 18,
+        id: "mapbox.streets",
+        accessToken: API_KEY
+    }).addTo(map);
 
     // adding markers
     /*d3.csv(HIKE_DATA_FILE_NAME, function(dataset){
@@ -37,7 +37,7 @@
         
     });*/
 //    return map
-//};
+}
 
 // function graphScatter(state = 'All'){
 //     d3.csv(HIKE_DATA_FILE_NAME, function(dataset){
@@ -127,52 +127,63 @@
 //     })
 // };
 
-// function graphPie(state = 'All'){
-//     d3.csv(HIKE_DATA_FILE_NAME, function(dataset){
-//         //console.log(dataset);
-//         let colorscale = ['F18A3F','F16A45','F04C4B','EF506F','EE5692','ED5BB2','EC61D0','EA66EB','CF6BEA','B770E9','A276E8','8F7BE7','8082E6','859BE5','8AB1E4','8FC4E3','94D5E2','99E1DF','9EE0D0','A3E0C5']
-        
-//         if(state == 'All'){
-//             dataset = dataset;
+function graphPie(state = 'All') {
+    var colorscale = ['F18A3F', 'F16A45', 'F04C4B', 'EF506F', 'EE5692', 'ED5BB2', 'EC61D0', 'EA66EB', 'CF6BEA', 'B770E9', 'A276E8', '8F7BE7', '8082E6', '859BE5', '8AB1E4', '8FC4E3', '94D5E2', '99E1DF', '9EE0D0', 'A3E0C5']
+
+//         if (state == 'All') {
 //             visits = [];
-//             for (let i=0; i < dataset.length; i++){
+//             for (i = 0; i < dataset.length; i++){ 
 //                 visits.push(dataset[i].abr)
 //             };
-//             states = {};
-//             for (let i=0; i<visits.length; i++){
-//                 x = visits[i];
-//                 if (states[x] !== undefined){
-//                     states[x]++
-//                 } else {
-//                     states[x] = 1;
-//                 }
-//             }
-//             var myDiv = document.getElementById("pie");
-//             let data = [{
-//                 values: Object.values(states),
-//                 labels: Object.keys(states),
-//                 type: 'pie',
-//                 textinfo: 'label',
-//                 textposition: 'outside',
-//             }];
-//             let layout = {
-//                 showlegend:false,
-//                 autosize: false,
-//                 height: myDiv.clientHeight,
-//                 width: myDiv.clientWidth,
-//                 margin: {
-//                     l: 30,
-//                     r: 40,
-//                     b: 30,
-//                     t: 40,
-//                     pad: 4
-//                 },
-//                 title: 'Hikes by State',
-//                 plot_bgcolor: 'cyan',
-//                 paper_bgcolor: '#648ca6',
-//                 colorway : colorscale
-//             };
-//             Plotly.newPlot('pie', data, layout);
+
+    var httpRequest = new XMLHttpRequest();
+    httpRequest.onreadystatechange = function() {
+        if (this.status == "200") {            
+            var responseBody = JSON.parse(this.responseText);
+
+            var hikesByState = new Map();
+            for (i in responseBody) {
+                hikesByState.set(responseBody[i]["state"], parseInt(responseBody[i]["count"]));
+            }
+
+            console.log([...hikesByState.values()]);
+            console.log([...hikesByState.keys()]);
+            
+            var hikesByStatePieChart = document.getElementById("pie");
+
+            let data = [{
+                values: [...hikesByState.values()],
+                labels: [...hikesByState.keys()],
+                type: 'pie',
+                textinfo: 'label',
+                textposition: 'outside',
+            }];
+
+            let layout = {
+                showlegend: false,
+                autosize: false,
+                height: hikesByStatePieChart.clientHeight,
+                width: hikesByStatePieChart.clientWidth,
+                margin: {
+                    l: 30,
+                    r: 40,
+                    b: 30,
+                    t: 40,
+                    pad: 4
+                },
+                title: 'Hikes by State',
+                plot_bgcolor: 'cyan',
+                paper_bgcolor: '#648ca6',
+                colorway : colorscale
+            };
+
+            Plotly.newPlot('pie', data, layout);
+        }
+    };
+
+    httpRequest.open("GET", API_BASE_URL + "hikesByState", true);
+    httpRequest.send();
+
 //         } else{
 //             dataset = dataset.filter(d => d.State == state);
 //             visits = [];
@@ -215,10 +226,8 @@
 //             };
 //             Plotly.newPlot('pie', data, layout);
 //         };
-
-        
 //     })
-// }
+}
 
 // function populateLog(state = 'All'){
 //     Plotly.d3.csv(HIKE_DATA_FILE_NAME, function(err,rows){
@@ -354,14 +363,14 @@ function addTotals(state = "All") {
 }
 
 // function adjustMap(state = 'All', map) {
-//     map.flyTo([map_zooms[`${state}`][0][0], map_zooms[`${state}`][0][1]], map_zooms[`${state}`][1]);
+//     map.flyTo([MAP_ZOOMS[`${state}`][0][0], MAP_ZOOMS[`${state}`][0][1]], MAP_ZOOMS[`${state}`][1]);
 // }
 
 // applies filter to dataset to display state specific data, or total data
 function selectFilter(state) {
     // adjustMap(state, map);
 //     graphScatter(state);
-//     graphPie(state);
+    graphPie(state);
 //     populateLog(state);
 //     cumulativeMiles(state);
     addTotals(state);
@@ -395,7 +404,7 @@ function populateDropdown() {
         }
     };
 
-    httpRequest.open("GET", "https://script.google.com/macros/s/AKfycbyrtWLsl5f1PXdvarZYoh2GyR_UYKN05k4q9hbtLpP9FHMsjEU/exec?action=get&resource=" + "states", true);
+    httpRequest.open("GET", API_BASE_URL + "states", true);
     httpRequest.send();
 }
 
@@ -407,7 +416,7 @@ function getDataFromBackend(documentId, resource, unit = "", extraParameters = n
         }
     };  
 
-    var url = "https://script.google.com/macros/s/AKfycbyrtWLsl5f1PXdvarZYoh2GyR_UYKN05k4q9hbtLpP9FHMsjEU/exec?action=get&resource=" + resource;
+    var url = API_BASE_URL + resource;
 
     for (const [k, v] of extraParameters.entries()) {
         url += "&" + k + "=" + v;
@@ -420,9 +429,9 @@ function getDataFromBackend(documentId, resource, unit = "", extraParameters = n
 // initializing the page to display total hikes
 addTotals();
 populateDropdown();
-
-/*let map = initalizeMap();
-graphScatter();
+initializeMap();
 graphPie();
+
+/*graphScatter();
 populateLog();
 cumulativeMiles();*/

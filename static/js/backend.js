@@ -1,6 +1,16 @@
 var ss = SpreadsheetApp.openById("1ATW6D3DzMMeOuWaWqEXTbb8xyrEaCOmTQpsKpa-RZVw");
 var sheet = ss.getActiveSheet();
 
+const DATE_COL = "A";
+const HIKE_COL = "B";
+const STATE_COL = "C";
+const PARK_COL = "D";
+const DISTANCE_COL = "E";
+const ELEVATION_COL = "F";
+const LAT_COL = "G";
+const LON_COL = "H";
+const LINK_COL = "I";
+
 // This single method receives all GET requests, and has to conditional on the different endpoints due to limitations in the Google Script internal routing
 function doGet(request) {  
   if (request.parameter.resource == "totalHikes") {
@@ -37,6 +47,8 @@ function doGet(request) {
     } else {
       return ContentService.createTextOutput(JSON.stringify(getTotalParksVisited(request.parameter.state)));
     }
+  } else if (request.parameter.resource == "hikesByState") {
+    return ContentService.createTextOutput(JSON.stringify(getHikesByState()));
   } else {
     return ContentService.createTextOutput("I don't recognize that resource.");
   }
@@ -52,7 +64,7 @@ function getTotalDistanceHiked() {
   var totalDistance = 0.0;
   
   for (i = 2; i <= sheet.getLastRow(); i++) {
-    var currentCell = "F" + i;
+    var currentCell = DISTANCE_COL + i;
     var currentValue = sheet.getRange(currentCell).getValue();
     
     totalDistance += currentValue;
@@ -65,7 +77,7 @@ function getTotalElevationHiked() {
   var totalElevation = 0.0;
   
   for (i = 2; i <= sheet.getLastRow(); i++) {
-    var currentCell = "G" + i;
+    var currentCell = ELEVATION_COL + i;
     var currentValue = sheet.getRange(currentCell).getValue();
     
     totalElevation += currentValue;
@@ -82,7 +94,7 @@ function getStatesVisited() {
   var statesVisited = new Set();
   
   for (i = 2; i <= sheet.getLastRow(); i++) {
-    var currentCell = "C" + i;
+    var currentCell = STATE_COL + i;
     var currentValue = sheet.getRange(currentCell).getValue();
     
     statesVisited.add(currentValue);
@@ -95,7 +107,7 @@ function getStateHikeCount(state) {
   var stateHikeCount = 0;
   
   for (i = 2; i <= sheet.getLastRow(); i++) {
-    var currentStateCell = "C" + i;
+    var currentStateCell = STATE_COL + i;
     var currentStateValue = sheet.getRange(currentStateCell).getValue();
     
     if (currentStateValue == state) {
@@ -110,10 +122,10 @@ function getStateDistanceHiked(state) {
   var stateDistance = 0.0;
   
   for (i = 2; i <= sheet.getLastRow(); i++) {
-    var currentCell = "F" + i;
+    var currentCell = DISTANCE_COL + i;
     var currentValue = sheet.getRange(currentCell).getValue();
     
-    var currentStateCell = "C" + i;
+    var currentStateCell = STATE_COL + i;
     var currentStateValue = sheet.getRange(currentStateCell).getValue();
     
     if (currentStateValue == state) {
@@ -128,10 +140,10 @@ function getStateElevationHiked(state) {
   var stateElevation = 0.0;
   
   for (i = 2; i <= sheet.getLastRow(); i++) {
-    var currentCell = "G" + i;
+    var currentCell = ELEVATION_COL + i;
     var currentValue = sheet.getRange(currentCell).getValue();
     
-    var currentStateCell = "C" + i;
+    var currentStateCell = STATE_COL + i;
     var currentStateValue = sheet.getRange(currentStateCell).getValue();
     
     if (currentStateValue == state) {
@@ -146,10 +158,10 @@ function getTotalParksVisited(state) {
   var parksVisited = new Set();
   
   for (i = 2; i <= sheet.getLastRow(); i++) {
-    var currentCell = "E" + i;
+    var currentCell = PARK_COL + i;
     var currentValue = sheet.getRange(currentCell).getValue();
     
-    var currentStateCell = "C" + i;
+    var currentStateCell = STATE_COL + i;
     var currentStateValue = sheet.getRange(currentStateCell).getValue();
     
     if (currentStateValue == state && currentValue != null && currentValue != "") {
@@ -157,7 +169,37 @@ function getTotalParksVisited(state) {
     }
   }
   
-  return parksVisited.size();
+  return parksVisited.size;
+}
+
+function getHikesByState() {
+  var hikesByState = new Map();
+  
+  for (i = 2; i <= sheet.getLastRow(); i++) {
+    var currentStateCell = STATE_COL + i;
+    var currentStateValue = sheet.getRange(currentStateCell).getValue();
+    
+    if (hikesByState.has(currentStateValue)) {
+      hikesByState.set(currentStateValue, hikesByState.get(currentStateValue) + 1);
+    } else {
+      hikesByState.set(currentStateValue, 1);
+    }
+  }
+  
+  var response = [];
+    
+  for (const [k, v] of hikesByState.entries()) {
+    response.push({
+      "state": k,
+      "count": v,
+    });
+  }
+  
+  return response;
+}
+
+function getHikesByPark(state) {
+  // TODO
 }
 
 // Taken from: https://stackoverflow.com/questions/7342957/how-do-you-round-to-1-decimal-place-in-javascript
