@@ -16,62 +16,81 @@ function initializeMap() {
         accessToken: API_KEY
     }).addTo(map);
 
-    // adding markers
-    /*d3.csv(HIKE_DATA_FILE_NAME, function(dataset){
-        // console.log(dataset);
-
-        // make markers for each hike location, then add a popup to the marker
-        for (let i = 0; i < dataset.length; i++){
-            lat = dataset[i].Lat;
-            lon = dataset[i].Lon;
-            let m = L.marker([lat,lon]).addTo(map);
-            let p = L.popup({keepInView: true})
-                        .setLatLng([dataset[i].Lat,dataset[i].Lon])
-                        .setContent('<h3>' + dataset[i].Hike + ', ' + dataset[i].Park + '</h3>' + 
-                                    '<h6 id="popText">' + 'Distance: '+ formatNumber(dataset[i].Distance) + '</h6>' +
-                                    '<h6 id="popText">' + 'Elevation: '+ formatNumber(dataset[i].Elevation_Gain) + '</h6>' +
-                                    "<a href='" + dataset[i].Url + "'>Visit the Hike Here!</a>"
-            );
-            m.bindPopup(p);
-        }
+    /*
+    // make markers for each hike location, then add a popup to the marker
+    for (let i = 0; i < dataset.length; i++){
+        lat = dataset[i].Lat;
+        lon = dataset[i].Lon;
+        let m = L.marker([lat,lon]).addTo(map);
+        let p = L.popup({keepInView: true})
+                    .setLatLng([dataset[i].Lat,dataset[i].Lon])
+                    .setContent('<h3>' + dataset[i].Hike + ', ' + dataset[i].Park + '</h3>' + 
+                                '<h6 id="popText">' + 'Distance: '+ formatNumber(dataset[i].Distance) + '</h6>' +
+                                '<h6 id="popText">' + 'Elevation: '+ formatNumber(dataset[i].Elevation_Gain) + '</h6>' +
+                                "<a href='" + dataset[i].Url + "'>Visit the Hike Here!</a>"
+        );
+        m.bindPopup(p);
+    }
         
     });*/
-//    return map
+
+    return map;
 }
 
-// function graphScatter(state = 'All'){
-//     d3.csv(HIKE_DATA_FILE_NAME, function(dataset){
-//         if(state == 'All'){
-//             dataset = dataset;
-//             let x_axis = [];
-//             let y_axis = [];
-//             var myDiv = document.getElementById("scatter");
-//             for (let i = 0; i < dataset.length; i++){
-//                 x_axis.push(parseFloat(dataset[i].Distance))
-//                 y_axis.push(parseFloat(dataset[i].Elevation_Gain))
-//             };
-//             var trace1 = {
-//                 x: x_axis,
-//                 y: y_axis,
-//                 mode: 'markers',
-//                 type: 'scatter',
-//             };
-//             var data = [trace1]
-//             var layout = {
-//                 autosize: false,
-//                 height: myDiv.clientHeight,
-//                 width: myDiv.clientWidth,
-//                 margin: {
-//                     l: 50,
-//                     r: 45,
-//                     b: 35,
-//                     t: 40,
-//                     pad: 4
-//                 },
-//                 title: 'Miles Hiked vs Feet Hiked',
-//                 paper_bgcolor: '#648ca6',
-//             };
-//             Plotly.newPlot('scatter', data, layout);
+function graphScatter(state = "All") {
+    // TODO: Handle state filter
+
+    var httpRequest = new XMLHttpRequest();
+    httpRequest.onreadystatechange = function() {
+        if (this.status == "200") {
+            var responseBody = JSON.parse(this.responseText);
+
+            var distances = [];
+            var elevations = [];
+            for (i in responseBody) {
+                distances.push(responseBody[i]["distance"]);
+                elevations.push(responseBody[i]["elevation"]);
+            }
+
+            var trace1 = {
+                x: distances,
+                y: elevations,
+                mode: "markers",
+                type: "scatter",
+            };
+        
+            var data = [trace1]
+        
+            var scatterDiv = document.getElementById("scatter");
+        
+            var layout = {
+                autosize: false,
+                height: scatterDiv.clientHeight,
+                width: scatterDiv.clientWidth,
+                margin: {
+                    l: 50,
+                    r: 45,
+                    b: 35,
+                    t: 40,
+                    pad: 4
+                },
+                title: "Miles Hiked vs Feet Hiked",
+                paper_bgcolor: "#648ca6"
+            };
+        
+            Plotly.newPlot("scatter", data, layout);
+        }
+    };
+
+    if (state == "All") {
+        httpRequest.open("GET", API_BASE_URL + "allHikes", true);
+    } else {
+        //httpRequest.open("GET", API_BASE_URL + "stateHikes&state=" + state, true);
+    }
+
+    httpRequest.send();
+
+
 //         } else{
 //             stateDF = dataset.filter(d => d.State == state);
 //             otherDF = dataset.filter(d => d.State !== state);
@@ -125,7 +144,7 @@ function initializeMap() {
 //         };
 
 //     })
-// };
+}
 
 function graphPie(state = "All") {
     var httpRequest = new XMLHttpRequest();
@@ -332,9 +351,9 @@ function addTotals(state = "All") {
     }
 }
 
-// function adjustMap(state = 'All', map) {
-//     map.flyTo([MAP_ZOOMS[`${state}`][0][0], MAP_ZOOMS[`${state}`][0][1]], MAP_ZOOMS[`${state}`][1]);
-// }
+function adjustMap(map, state = 'All') {
+    map.flyTo([MAP_ZOOMS[`${state}`][0][0], MAP_ZOOMS[`${state}`][0][1]], MAP_ZOOMS[`${state}`][1]);
+}
 
 function populateDropdown() {
     var httpRequest = new XMLHttpRequest();
@@ -383,12 +402,13 @@ function getDataFromBackend(documentId, resource, unit = "", extraParameters = n
 
 // applies filter to dataset to display state specific data, or total data
 function selectFilter(state) {
-    // adjustMap(state, map);
-//     graphScatter(state);
+    adjustMap(map, state);
+
+    addTotals(state);
+    graphScatter(state);
     graphPie(state);
     populateLog(state);
     cumulativeMiles(state);
-    addTotals(state);
 }
 
 // Helper function to add commas to big numbers
@@ -397,11 +417,11 @@ function formatNumber(num) {
 }
 
 // initializing the page to display total hikes
-addTotals();
+let map = initializeMap();
 populateDropdown();
-initializeMap();
-graphPie();
-cumulativeMiles();
-populateLog();
 
-//graphScatter();
+addTotals();
+graphScatter();
+graphPie();
+populateLog();
+cumulativeMiles();
