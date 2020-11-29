@@ -2,6 +2,8 @@
 
 Hiking Dashboard
 
+View at: https://aha1994.github.io/hiking-dashboard/
+
 ## Spreadsheet Assumptions
 
 1. The columns need to be in the correct order/placement.
