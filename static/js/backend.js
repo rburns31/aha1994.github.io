@@ -13,7 +13,7 @@ const LINK_COL = 8;
 
 // This single method receives all GET requests, and has to conditional on the different endpoints due to limitations in the Google Script internal routing
 function doGet(request) {
-  var fullSheet = sheet.getRange(2, 1, sheet.getLastRow() -  1, 8).getValues();
+  var fullSheet = sheet.getRange(2, 1, sheet.getLastRow() -  1, 9).getValues();
   
   if (request.parameter.resource == "totalHikes") {
     return ContentService.createTextOutput(JSON.stringify(getTotalHikeCount(fullSheet)));
