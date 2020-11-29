@@ -128,105 +128,41 @@ function initializeMap() {
 // };
 
 function graphPie(state = 'All') {
-    var colorscale = ['F18A3F', 'F16A45', 'F04C4B', 'EF506F', 'EE5692', 'ED5BB2', 'EC61D0', 'EA66EB', 'CF6BEA', 'B770E9', 'A276E8', '8F7BE7', '8082E6', '859BE5', '8AB1E4', '8FC4E3', '94D5E2', '99E1DF', '9EE0D0', 'A3E0C5']
-
-//         if (state == 'All') {
-//             visits = [];
-//             for (i = 0; i < dataset.length; i++){ 
-//                 visits.push(dataset[i].abr)
-//             };
-
     var httpRequest = new XMLHttpRequest();
-    httpRequest.onreadystatechange = function() {
-        if (this.status == "200") {            
-            var responseBody = JSON.parse(this.responseText);
 
-            var hikesByState = new Map();
-            for (i in responseBody) {
-                hikesByState.set(responseBody[i]["state"], parseInt(responseBody[i]["count"]));
+    if (state == "All") {
+        httpRequest.onreadystatechange = function() {
+            if (this.status == "200") {            
+                var responseBody = JSON.parse(this.responseText);
+
+                var hikesByState = new Map();
+                for (i in responseBody) {
+                    hikesByState.set(STATE_ABBREVIATIONS[responseBody[i]["state"]], parseInt(responseBody[i]["count"]));
+                }
+
+                graphPieHelper("Hikes by State", hikesByState);
             }
+        };
 
-            console.log([...hikesByState.values()]);
-            console.log([...hikesByState.keys()]);
-            
-            var hikesByStatePieChart = document.getElementById("pie");
+        httpRequest.open("GET", API_BASE_URL + "hikesByState", true);
+    } else {
+        httpRequest.onreadystatechange = function() {
+            if (this.status == "200") {            
+                var responseBody = JSON.parse(this.responseText);
 
-            let data = [{
-                values: [...hikesByState.values()],
-                labels: [...hikesByState.keys()],
-                type: 'pie',
-                textinfo: 'label',
-                textposition: 'outside',
-            }];
+                var hikesByPark = new Map();
+                for (i in responseBody) {
+                    hikesByPark.set(responseBody[i]["park"], parseInt(responseBody[i]["count"]));
+                }
 
-            let layout = {
-                showlegend: false,
-                autosize: false,
-                height: hikesByStatePieChart.clientHeight,
-                width: hikesByStatePieChart.clientWidth,
-                margin: {
-                    l: 30,
-                    r: 40,
-                    b: 30,
-                    t: 40,
-                    pad: 4
-                },
-                title: 'Hikes by State',
-                plot_bgcolor: 'cyan',
-                paper_bgcolor: '#648ca6',
-                colorway : colorscale
-            };
+                graphPieHelper("State Hikes by Park", hikesByPark);
+            }
+        };
 
-            Plotly.newPlot('pie', data, layout);
-        }
-    };
+        httpRequest.open("GET", API_BASE_URL + "hikesByPark&state=" + state, true);
+    }
 
-    httpRequest.open("GET", API_BASE_URL + "hikesByState", true);
     httpRequest.send();
-
-//         } else{
-//             dataset = dataset.filter(d => d.State == state);
-//             visits = [];
-//             for (let i=0; i < dataset.length; i++){
-//                 visits.push(dataset[i].Park)
-//             };
-//             parks_hiked = {};
-//             for (let i=0; i<visits.length; i++){
-//                 x = visits[i];
-//                 if (parks_hiked[x] !== undefined){
-//                     parks_hiked[x]++
-//                 } else {
-//                     parks_hiked[x] = 1;
-//                 }
-//             };
-//             var myDiv = document.getElementById("pie");
-//             let data = [{
-//                 values: Object.values(parks_hiked),
-//                 labels: Object.keys(parks_hiked),
-//                 type: 'pie',
-//                 textinfo: 'percent',
-//                 textposition: 'inside',
-//             }];
-//             let layout = {
-//                 showlegend:false,
-//                 autosize: false,
-//                 height: myDiv.clientHeight,
-//                 width: myDiv.clientWidth,
-//                 margin: {
-//                     l: 30,
-//                     r: 40,
-//                     b: 30,
-//                     t: 40,
-//                     pad: 4
-//                 },
-//                 title: `Parks Hiked in ${state}`,
-//                 plot_bgcolor: 'cyan',
-//                 paper_bgcolor: '#648ca6',
-//                 colorway : colorscale
-//             };
-//             Plotly.newPlot('pie', data, layout);
-//         };
-//     })
 }
 
 // function populateLog(state = 'All'){
@@ -340,6 +276,38 @@ function graphPie(state = 'All') {
 
 //     })
 // }
+
+function graphPieHelper(title, hikesByEntity) {
+    var hikesByStatePieChart = document.getElementById("pie");
+
+    let data = [{
+        values: [...hikesByEntity.values()],
+        labels: [...hikesByEntity.keys()],
+        type: 'pie',
+        textinfo: 'label',
+        textposition: 'outside',
+    }];
+
+    let layout = {
+        showlegend: false,
+        autosize: false,
+        height: hikesByStatePieChart.clientHeight,
+        width: hikesByStatePieChart.clientWidth,
+        margin: {
+            l: 30,
+            r: 40,
+            b: 30,
+            t: 40,
+            pad: 4
+        },
+        title: title,
+        plot_bgcolor: "cyan",
+        paper_bgcolor: "#648ca6",
+        colorway : ['F18A3F', 'F16A45', 'F04C4B', 'EF506F', 'EE5692', 'ED5BB2', 'EC61D0', 'EA66EB', 'CF6BEA', 'B770E9', 'A276E8', '8F7BE7', '8082E6', '859BE5', '8AB1E4', '8FC4E3', '94D5E2', '99E1DF', '9EE0D0', 'A3E0C5']
+    };
+
+    Plotly.newPlot('pie', data, layout);
+}
 
 function addTotals(state = "All") {
     if (state == "All") {

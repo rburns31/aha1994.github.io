@@ -1,114 +1,122 @@
 var ss = SpreadsheetApp.openById("1ATW6D3DzMMeOuWaWqEXTbb8xyrEaCOmTQpsKpa-RZVw");
 var sheet = ss.getActiveSheet();
 
-const DATE_COL = "A";
-const HIKE_COL = "B";
-const STATE_COL = "C";
-const PARK_COL = "D";
-const DISTANCE_COL = "E";
-const ELEVATION_COL = "F";
-const LAT_COL = "G";
-const LON_COL = "H";
-const LINK_COL = "I";
+const DATE_COL = 0;
+const HIKE_COL = 1;
+const STATE_COL = 2;
+const PARK_COL = 3;
+const DISTANCE_COL = 4;
+const ELEVATION_COL = 5;
+const LAT_COL = 6;
+const LON_COL = 7;
+const LINK_COL = 8;
 
 // This single method receives all GET requests, and has to conditional on the different endpoints due to limitations in the Google Script internal routing
-function doGet(request) {  
+function doGet(request) {
+  var fullSheet = sheet.getRange(2, 1, sheet.getLastRow() -  1, 8).getValues();
+  
   if (request.parameter.resource == "totalHikes") {
-    return ContentService.createTextOutput(JSON.stringify(getTotalHikeCount()));
+    return ContentService.createTextOutput(JSON.stringify(getTotalHikeCount(fullSheet)));
   } else if (request.parameter.resource == "totalMiles") {
-    return ContentService.createTextOutput(JSON.stringify(getTotalDistanceHiked()));
+    return ContentService.createTextOutput(JSON.stringify(getTotalDistanceHiked(fullSheet)));
   } else if (request.parameter.resource == "totalElevation") {
-    return ContentService.createTextOutput(JSON.stringify(getTotalElevationHiked()));
+    return ContentService.createTextOutput(JSON.stringify(getTotalElevationHiked(fullSheet)));
   } else if (request.parameter.resource == "totalStates") {
-    return ContentService.createTextOutput(JSON.stringify(getTotalStatesVisited()));
+    return ContentService.createTextOutput(JSON.stringify(getTotalStatesVisited(fullSheet)));
   } else if (request.parameter.resource == "states") {
-    return ContentService.createTextOutput(JSON.stringify(getStatesVisited()));
+    return ContentService.createTextOutput(JSON.stringify(getStatesVisited(fullSheet)));
   } else if (request.parameter.resource == "stateHikes") {
     if (request.parameter.state == null) {
       return ContentService.createTextOutput("Please provide a state parameter to use this resource.");
     } else {
-      return ContentService.createTextOutput(JSON.stringify(getStateHikeCount(request.parameter.state)));
+      return ContentService.createTextOutput(JSON.stringify(getStateHikeCount(fullSheet, request.parameter.state)));
     }
   } else if (request.parameter.resource == "stateMiles") {
     if (request.parameter.state == null) {
       return ContentService.createTextOutput("Please provide a state parameter to use this resource.");
-    } else {
-      return ContentService.createTextOutput(JSON.stringify(getStateDistanceHiked(request.parameter.state)));
+    } else {      
+      return ContentService.createTextOutput(JSON.stringify(getStateDistanceHiked(fullSheet, request.parameter.state)));
     }
   } else if (request.parameter.resource == "stateElevation") {
     if (request.parameter.state == null) {
       return ContentService.createTextOutput("Please provide a state parameter to use this resource.");
     } else {
-      return ContentService.createTextOutput(JSON.stringify(getStateElevationHiked(request.parameter.state)));
+      return ContentService.createTextOutput(JSON.stringify(getStateElevationHiked(fullSheet, request.parameter.state)));
     }
   } else if (request.parameter.resource == "totalParks") {
     if (request.parameter.state == null) {
       return ContentService.createTextOutput("Please provide a state parameter to use this resource.");
     } else {
-      return ContentService.createTextOutput(JSON.stringify(getTotalParksVisited(request.parameter.state)));
+      return ContentService.createTextOutput(JSON.stringify(getTotalParksVisited(fullSheet, request.parameter.state)));
     }
   } else if (request.parameter.resource == "hikesByState") {
-    return ContentService.createTextOutput(JSON.stringify(getHikesByState()));
+    return ContentService.createTextOutput(JSON.stringify(getHikesByState(fullSheet)));
+  } else if (request.parameter.resource == "hikesByPark") {
+    if (request.parameter.state == null) {
+      return ContentService.createTextOutput("Please provide a state parameter to use this resource.");
+    } else {
+      return ContentService.createTextOutput(JSON.stringify(getHikesByPark(fullSheet, request.parameter.state)));
+    }
   } else {
     return ContentService.createTextOutput("I don't recognize that resource.");
   }
 }
 
-function getTotalHikeCount() {
-  var hikeCount = parseInt(sheet.getLastRow() - 1);
+function getTotalHikeCount(fullSheet) {
+  var hikeCount = 0;
+  
+  for (var row in fullSheet) {
+    hikeCount++;
+  }
   
   return hikeCount;
 }
 
-function getTotalDistanceHiked() {
+function getTotalDistanceHiked(fullSheet) {
   var totalDistance = 0.0;
   
-  for (i = 2; i <= sheet.getLastRow(); i++) {
-    var currentCell = DISTANCE_COL + i;
-    var currentValue = sheet.getRange(currentCell).getValue();
+  for (var row in fullSheet) {
+    var currentDistance = fullSheet[row][DISTANCE_COL];
     
-    totalDistance += currentValue;
+    totalDistance += currentDistance;
   }
   
   return round(totalDistance, 1);
 }
 
-function getTotalElevationHiked() {
+function getTotalElevationHiked(fullSheet) {
   var totalElevation = 0.0;
   
-  for (i = 2; i <= sheet.getLastRow(); i++) {
-    var currentCell = ELEVATION_COL + i;
-    var currentValue = sheet.getRange(currentCell).getValue();
+  for (var row in fullSheet) {
+    var currentElevation = fullSheet[row][ELEVATION_COL];
     
-    totalElevation += currentValue;
+    totalElevation += currentElevation;
   }
   
   return parseInt(totalElevation);
 }
 
-function getTotalStatesVisited() {
-  return parseInt(getStatesVisited().length);
+function getTotalStatesVisited(fullSheet) {
+  return parseInt(getStatesVisited(fullSheet).length);
 }
 
-function getStatesVisited() {
+function getStatesVisited(fullSheet) {
   var statesVisited = new Set();
   
-  for (i = 2; i <= sheet.getLastRow(); i++) {
-    var currentCell = STATE_COL + i;
-    var currentValue = sheet.getRange(currentCell).getValue();
+  for (var row in fullSheet) {
+    var currentState = fullSheet[row][STATE_COL];
     
-    statesVisited.add(currentValue);
+    statesVisited.add(currentState);
   }
     
   return [...statesVisited].sort();
 }
 
-function getStateHikeCount(state) {
+function getStateHikeCount(fullSheet, state) {
   var stateHikeCount = 0;
   
-  for (i = 2; i <= sheet.getLastRow(); i++) {
-    var currentStateCell = STATE_COL + i;
-    var currentStateValue = sheet.getRange(currentStateCell).getValue();
+  for (var row in fullSheet) {
+    var currentStateValue = fullSheet[row][STATE_COL];
     
     if (currentStateValue == state) {
       stateHikeCount++;
@@ -118,66 +126,60 @@ function getStateHikeCount(state) {
   return parseInt(stateHikeCount);
 }
 
-function getStateDistanceHiked(state) {
+function getStateDistanceHiked(fullSheet, state) {
   var stateDistance = 0.0;
-  
-  for (i = 2; i <= sheet.getLastRow(); i++) {
-    var currentCell = DISTANCE_COL + i;
-    var currentValue = sheet.getRange(currentCell).getValue();
-    
-    var currentStateCell = STATE_COL + i;
-    var currentStateValue = sheet.getRange(currentStateCell).getValue();
+
+  for (var row in fullSheet) {
+    var currentStateValue = fullSheet[row][STATE_COL];
+    var currentDistance = fullSheet[row][DISTANCE_COL];
     
     if (currentStateValue == state) {
-      stateDistance += currentValue;
+      stateDistance += currentDistance;
     }
   }
   
   return round(stateDistance, 1);
 }
 
-function getStateElevationHiked(state) {
+function getStateElevationHiked(fullSheet, state) {
   var stateElevation = 0.0;
   
-  for (i = 2; i <= sheet.getLastRow(); i++) {
-    var currentCell = ELEVATION_COL + i;
-    var currentValue = sheet.getRange(currentCell).getValue();
-    
-    var currentStateCell = STATE_COL + i;
-    var currentStateValue = sheet.getRange(currentStateCell).getValue();
+  for (var row in fullSheet) {
+    var currentStateValue = fullSheet[row][STATE_COL];
+    var currentElevation = fullSheet[row][ELEVATION_COL];
     
     if (currentStateValue == state) {
-      stateElevation += currentValue;
+      stateElevation += currentElevation;
     }
   }
   
   return parseInt(stateElevation);
 }
 
-function getTotalParksVisited(state) {
+function getTotalParksVisited(fullSheet, state) {
   var parksVisited = new Set();
   
-  for (i = 2; i <= sheet.getLastRow(); i++) {
-    var currentCell = PARK_COL + i;
-    var currentValue = sheet.getRange(currentCell).getValue();
+  for (var row in fullSheet) {
+    var currentStateValue = fullSheet[row][STATE_COL];
+    var currentPark = fullSheet[row][PARK_COL];
     
-    var currentStateCell = STATE_COL + i;
-    var currentStateValue = sheet.getRange(currentStateCell).getValue();
+    if (currentPark == null || currentPark == "") {
+      currentPark = "Unknown";
+    }
     
-    if (currentStateValue == state && currentValue != null && currentValue != "") {
-      parksVisited.add(currentValue);
+    if (currentStateValue == state) {
+      parksVisited.add(currentPark);
     }
   }
   
   return parksVisited.size;
 }
 
-function getHikesByState() {
+function getHikesByState(fullSheet) {
   var hikesByState = new Map();
   
-  for (i = 2; i <= sheet.getLastRow(); i++) {
-    var currentStateCell = STATE_COL + i;
-    var currentStateValue = sheet.getRange(currentStateCell).getValue();
+  for (var row in fullSheet) {
+    var currentStateValue = fullSheet[row][STATE_COL];
     
     if (hikesByState.has(currentStateValue)) {
       hikesByState.set(currentStateValue, hikesByState.get(currentStateValue) + 1);
@@ -198,8 +200,36 @@ function getHikesByState() {
   return response;
 }
 
-function getHikesByPark(state) {
-  // TODO
+function getHikesByPark(fullSheet, state) {
+  var hikesByPark = new Map();
+  
+  for (var row in fullSheet) {
+    var currentStateValue = fullSheet[row][STATE_COL];
+    var currentPark = fullSheet[row][PARK_COL];
+    
+    if (currentPark == null || currentPark == "") {
+      currentPark = "Unknown";
+    }
+    
+    if (currentStateValue == state) {
+      if (hikesByPark.has(currentPark)) {
+        hikesByPark.set(currentPark, hikesByPark.get(currentPark) + 1);
+      } else {
+        hikesByPark.set(currentPark, 1);
+      }
+    }
+  }
+  
+  var response = [];
+    
+  for (const [k, v] of hikesByPark.entries()) {
+    response.push({
+      "park": k,
+      "count": v,
+    });
+  }
+  
+  return response;
 }
 
 // Taken from: https://stackoverflow.com/questions/7342957/how-do-you-round-to-1-decimal-place-in-javascript
